@@ -113,6 +113,34 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
 
+### Setting a guardian contact: `guardian`
+
+Sets or replaces the guardian phone number for the person at the displayed index.
+
+Format: `guardian INDEX g/PHONE`
+
+* Enter an eight-digit Singapore number beginning with `6`, `8`, or `9`. You may prefix it with `+65` and use spaces or hyphens between digit groups.
+* The number is stored and displayed in canonical `+65XXXXXXXX` format. The same number may be used by multiple people, including the person's own phone number.
+* Entering a number that normalizes to the existing contact reports that it is already set.
+
+Examples:
+* `guardian 1 g/91234567`
+* `guardian 3 g/+65 6777 8899`
+
+### Setting an hourly rate: `rate`
+
+Sets or replaces a person's hourly rate in Singapore dollars.
+
+Format: `rate INDEX r/RATE`
+
+* Enter a plain decimal amount from `1.00` to `1000.00`, with at most two decimal places. Currency symbols, commas, signs, and leading zeroes are not accepted.
+* Rates are displayed with two decimal places, such as `S$80.00`. Values such as `80` and `80.00` are treated as equal.
+* Each person has one rate. Re-entering the same amount reports that it is already set.
+
+Examples:
+* `rate 1 r/80`
+* `rate 2 r/95.50`
+
 ### Locating persons by name: `find`
 
 Finds persons whose names contain any of the given keywords.
@@ -200,5 +228,7 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Guardian** | `guardian INDEX g/PHONE`<br> e.g., `guardian 1 g/91234567`
 **List**   | `list`
+**Rate** | `rate INDEX r/RATE`<br> e.g., `rate 2 r/95.50`
 **Help**   | `help`

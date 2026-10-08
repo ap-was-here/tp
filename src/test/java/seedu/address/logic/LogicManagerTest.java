@@ -27,6 +27,8 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.GuardianPhone;
+import seedu.address.model.person.HourlyRate;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -61,7 +63,7 @@ public class LogicManagerTest {
     @Test
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
-        assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandException(deleteCommand, String.format(MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, "9"));
     }
 
     @Test
@@ -85,6 +87,81 @@ public class LogicManagerTest {
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
+    }
+
+    @Test
+    public void execute_guardianAndRate_saveReloadAndNoChange() throws Exception {
+        Person student = new PersonBuilder().withName("Tutor Student").build();
+        model.addPerson(student);
+
+        CommandResult guardianResult = logic.execute("guardian 1 g/+65 6777 8899");
+        assertEquals("Guardian contact set for Tutor Student: +6567778899.", guardianResult.getFeedbackToUser());
+        assertEquals(1, guardianResult.getSelectedPersonIndex().orElseThrow());
+        assertEquals("Guardian contact for Tutor Student is already +6567778899.",
+                logic.execute("guardian 1 g/6777-8899").getFeedbackToUser());
+        assertEquals("Guardian contact updated for Tutor Student: +6567778899 -> +6591234567.",
+                logic.execute("guardian 1 g/91234567").getFeedbackToUser());
+
+        CommandResult rateResult = logic.execute("rate 1 r/80");
+        assertEquals("Hourly rate set for Tutor Student: S$80.00.", rateResult.getFeedbackToUser());
+        assertEquals(1, rateResult.getSelectedPersonIndex().orElseThrow());
+        assertEquals("Hourly rate for Tutor Student is already S$80.00.", logic.execute("rate 1 r/80.00")
+                .getFeedbackToUser());
+        assertEquals("Hourly rate updated for Tutor Student: S$80.00 -> S$95.50.",
+                logic.execute("rate 1 r/95.5").getFeedbackToUser());
+
+        Person updated = logic.getFilteredPersonList().getFirst();
+        assertEquals(java.util.Optional.of(new GuardianPhone("+6591234567")), updated.getGuardianPhone());
+        assertEquals(java.util.Optional.of(new HourlyRate(new java.math.BigDecimal("95.50"))), updated.getHourlyRate());
+        assertEquals(student.getPhone(), updated.getPhone());
+        assertEquals(student.getAddress(), updated.getAddress());
+        assertEquals(student.getEmail(), updated.getEmail());
+
+        JsonAddressBookStorage reloadedStorage = new JsonAddressBookStorage(
+                temporaryFolder.resolve("addressBook.json"));
+        Person reloaded = reloadedStorage.readAddressBook().orElseThrow().getPersonList().getFirst();
+        assertEquals(updated, reloaded);
+    }
+
+    @Test
+    public void execute_guardianSaveFailure_preservesPerson() {
+        Person student = new PersonBuilder().withName("Tutor Student").build();
+        model.addPerson(student);
+        JsonAddressBookStorage failingStorage = new JsonAddressBookStorage(temporaryFolder.resolve("failure.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                throw DUMMY_IO_EXCEPTION;
+            }
+        };
+        StorageManager failingStorageManager = new StorageManager(failingStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("failure-prefs.json")));
+        logic = new LogicManager(model, failingStorageManager);
+
+        assertThrows(CommandException.class, LogicManager.MESSAGE_ATOMIC_SAVE_FAILURE, () -> logic.execute(
+                "guardian 1 g/91234567"));
+        assertEquals(student, model.getFilteredPersonList().getFirst());
+    }
+
+    @Test
+    public void execute_rateSaveFailure_preservesExistingRate() {
+        Person base = new PersonBuilder().withName("Tutor Student").build();
+        Person student = new Person(base.getName(), base.getPhone(), base.getEmail(), base.getAddress(), base.getTags(),
+                java.util.Optional.empty(), java.util.Optional.of(new HourlyRate(new java.math.BigDecimal("80.00"))));
+        model.addPerson(student);
+        JsonAddressBookStorage failingStorage = new JsonAddressBookStorage(
+                temporaryFolder.resolve("rate-failure.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                throw DUMMY_IO_EXCEPTION;
+            }
+        };
+        StorageManager failingStorageManager = new StorageManager(failingStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("rate-failure-prefs.json")));
+        logic = new LogicManager(model, failingStorageManager);
+
+        assertThrows(CommandException.class, LogicManager.MESSAGE_ATOMIC_SAVE_FAILURE, () -> logic.execute(
+                "rate 1 r/95.50"));
+        assertEquals(student, model.getFilteredPersonList().getFirst());
     }
 
     /**

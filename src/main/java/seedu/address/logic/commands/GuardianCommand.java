@@ -27,6 +27,7 @@ public class GuardianCommand extends Command implements AtomicCommand {
     private final Index index;
     private final GuardianPhone guardianPhone;
 
+    /** Creates a command that sets the guardian phone for the displayed student index. */
     public GuardianCommand(Index index, GuardianPhone guardianPhone) {
         requireNonNull(index);
         requireNonNull(guardianPhone);

@@ -5,8 +5,10 @@ import static seedu.address.storage.JsonAdaptedPerson.MISSING_FIELD_MESSAGE_FORM
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -14,7 +16,10 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.GuardianPhone;
+import seedu.address.model.person.HourlyRate;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 
 public class JsonAdaptedPersonTest {
@@ -36,6 +41,23 @@ public class JsonAdaptedPersonTest {
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(BENSON);
         assertEquals(BENSON, person.toModelType());
+    }
+
+    @Test
+    public void toModelType_missingOptionalFields_loadsUnset() throws Exception {
+        JsonAdaptedPerson adapted = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL,
+                VALID_ADDRESS, VALID_TAGS);
+        assertEquals(BENSON, adapted.toModelType());
+        assertEquals(Optional.empty(), adapted.toModelType().getGuardianPhone());
+        assertEquals(Optional.empty(), adapted.toModelType().getHourlyRate());
+    }
+
+    @Test
+    public void toModelType_optionalFields_roundTrips() throws Exception {
+        Person source = new Person(BENSON.getName(), BENSON.getPhone(), BENSON.getEmail(), BENSON.getAddress(),
+                BENSON.getTags(), Optional.of(new GuardianPhone("+6591234567")),
+                Optional.of(new HourlyRate(new BigDecimal("95.50"))));
+        assertEquals(source, new JsonAdaptedPerson(source).toModelType());
     }
 
     @Test

@@ -37,7 +37,8 @@ public final class IndexedParameterParserUtil {
 
         String normalized = Normalizer.normalize(arguments, Normalizer.Form.NFKC);
         int leadingWhitespace = 0;
-        while (leadingWhitespace < normalized.length() && Character.isWhitespace(normalized.charAt(leadingWhitespace))) {
+        while (leadingWhitespace < normalized.length()
+                && Character.isWhitespace(normalized.charAt(leadingWhitespace))) {
             leadingWhitespace++;
         }
         normalized = normalized.substring(leadingWhitespace);

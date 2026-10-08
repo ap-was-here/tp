@@ -27,6 +27,7 @@ public class RateCommand extends Command implements AtomicCommand {
     private final Index index;
     private final HourlyRate hourlyRate;
 
+    /** Creates a command that sets the hourly rate for the displayed student index. */
     public RateCommand(Index index, HourlyRate hourlyRate) {
         requireNonNull(index);
         requireNonNull(hourlyRate);
